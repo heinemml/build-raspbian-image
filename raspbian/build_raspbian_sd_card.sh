@@ -211,7 +211,7 @@ wget --continue https://raw.github.com/Hexxeh/rpi-update/master/rpi-update -O /u
 chmod +x /usr/bin/rpi-update
 mkdir -p /lib/modules/3.1.9+
 touch /boot/start.elf
-rpi-update
+SKIP_WARNING=1 SKIP_BACKUP=1 rpi-update
 
 apt-get -y install locales console-common ntp openssh-server less vim
 
