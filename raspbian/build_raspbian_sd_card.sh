@@ -76,7 +76,7 @@ if [ "${deb_local_mirror}" == "" ]; then
 fi
 
 bootsize="64M"
-deb_release="wheezy"
+deb_release="jessie"
 
 relative_path=`dirname $0`
 
@@ -94,6 +94,7 @@ buildenv=`cd ${absolute_path}; cd ..; mkdir -p rpi/images; cd rpi; pwd`
 
 rootfs="${buildenv}/rootfs"
 bootfs="${rootfs}/boot"
+persistfs="${rootfs}/persist"
 
 today=`date +%Y%m%d`
 
@@ -122,6 +123,11 @@ n
 p
 2
 
++512M
+n
+p
+3
+
 
 w
 EOF
@@ -132,26 +138,29 @@ if [ "${image}" != "" ]; then
   device=`kpartx -va ${image} | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
   device="/dev/mapper/${device}"
   bootp=${device}p1
-  rootp=${device}p2
+  persistp=${device}p2
+  rootp=${device}p3
 else
   if ! [ -b ${device}1 ]; then
     bootp=${device}p1
-    rootp=${device}p2
+    persistp=${device}p2
+    rootp=${device}p3
     if ! [ -b ${bootp} ]; then
       echo "uh, oh, something went wrong, can't find bootpartition neither as ${device}1 nor as ${device}p1, exiting."
       exit 1
     fi
   else
     bootp=${device}1
-    rootp=${device}2
+    persistp=${device}2
+    rootp=${device}3
   fi
 fi
 
 mkfs.vfat ${bootp}
+mkfs.ext4 ${persistp}
 mkfs.ext4 ${rootp}
 
 mkdir -p ${rootfs}
-
 mount ${rootp} ${rootfs}
 
 mkdir -p ${rootfs}/proc
@@ -173,14 +182,19 @@ cp /usr/bin/qemu-arm-static usr/bin/
 LANG=C chroot ${rootfs} /debootstrap/debootstrap --second-stage
 
 mount ${bootp} ${bootfs}
+mkdir ${persistfs}
+mount ${persistp} ${persistfs}
 
 echo "deb ${deb_local_mirror} ${deb_release} main contrib non-free
 " > etc/apt/sources.list
 
-echo "dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait" > boot/cmdline.txt
+echo "dwc_otg.lpm_enable=0 console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 console=tty1 root=/dev/mmcblk0p3 rootfstype=ext4 fbcon=map:10 consoleblank=0 rootwait quiet" > boot/cmdline.txt
 
 echo "proc            /proc           proc    defaults        0       0
-/dev/mmcblk0p1  /boot           vfat    defaults        0       0
+/dev/mmcblk0p1  /boot           vfat    defaults,ro        0       0
+/dev/mmcblk0p2  /persist        ext4    defaults        0       0
+/dev/mmcblk0p3  /          	ext4    defaults        0       0
+tmpfs		/tmp		tmpfs	defaults	0	0
 " > etc/fstab
 
 echo "raspberrypi" > etc/hostname
@@ -211,14 +225,14 @@ wget --continue https://raw.github.com/Hexxeh/rpi-update/master/rpi-update -O /u
 chmod +x /usr/bin/rpi-update
 mkdir -p /lib/modules/3.1.9+
 touch /boot/start.elf
-SKIP_WARNING=1 SKIP_BACKUP=1 rpi-update
+SKIP_WARNING=1 SKIP_BACKUP=1 UPDATE_SELF=0 REPO_URI=https://github.com/notro/rpi-firmware  rpi-update
 
 apt-get -y install locales console-common ntp openssh-server less vim
 
 # execute install script at mounted external media (delivery contents folder)
 cd /usr/src/delivery
 ./install.sh
-cd
+cd /
 
 echo \"root:raspberry\" | chpasswd
 sed -i -e 's/KERNEL\!=\"eth\*|/KERNEL\!=\"/' /lib/udev/rules.d/75-persistent-net-generator.rules

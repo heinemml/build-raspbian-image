@@ -1,0 +1,4 @@
+#!/bin/bash
+
+/usr/bin/mpc update --wait > /dev/null
+

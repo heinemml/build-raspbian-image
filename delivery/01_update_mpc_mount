@@ -1,0 +1,6 @@
+#!/bin/bash
+
+MEDIAFOLDER=`echo $UM_MOUNTPOINT | cut -c 2-`
+rm /media/usb
+/usr/bin/mpc update --wait > /dev/null
+mpc add $MEDIAFOLDER
