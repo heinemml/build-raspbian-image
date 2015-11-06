@@ -1,6 +1,28 @@
 #!/bin/bash
 
 MEDIAFOLDER=`echo $UM_MOUNTPOINT | cut -c 2-`
-rm /media/usb
+[ -d /media/usb ] && rm /media/usb
 /usr/bin/mpc update --wait > /dev/null
-mpc add $MEDIAFOLDER
+
+#add files not in playlist
+filelist=`mpc playlist -f %file%`
+if [ -z "$filelist" ]; then
+  mpc add media
+  exit 0
+fi
+
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
+addedfolders=" "
+for folder in `find /media/ -mindepth 2 -type d -not -path "*/\.*"`
+do
+  myfolder=`echo $folder | cut -c 2-`
+  match=$(echo $filelist | grep $myfolder)
+  if [ -z "$match" ]; then
+    myfolder=`echo $folder | cut -c 2-`
+    echo "adding $myfolder"
+    mpc add "$myfolder"
+    filelist=`mpc playlist -f %file%`
+  fi
+done
+IFS=$SAVEIFS
