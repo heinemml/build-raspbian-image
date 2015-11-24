@@ -26,7 +26,7 @@ echo ".Trashes
 " > /media/.mpdignore
 
 cp mpd.conf /etc
-usermod -aG pulse,pulse-access mpd
+usermod -aG pulse,pulse-access,bluetooth mpd
 mkdir /persist/mpd
 chown mpd:audio /persist/mpd
 
@@ -86,17 +86,12 @@ cp pointercal /etc
 
 #pulseaudio
 apt-get install -y --no-install-recommends bluez bluez-tools pulseaudio pulseaudio-module-bluetooth
-cp pulseaudio.service /etc/systemd/system/
-cp pulseaudio-bluetooth.conf /etc/dbus-1/system.d/
 
-echo "### Automatically load driver modules for Bluetooth hardware
-.ifexists module-bluetooth-policy.so
-load-module module-bluetooth-policy
-.endif
+sed -i "s/#Name.*/Name = AstraPi/" /etc/bluetooth/main.conf
 
-.ifexists module-bluetooth-discover.so
-load-module module-bluetooth-discover
-.endif" >> /etc/pulse/system.pa
+rm /var/lib/bluetooth
+mkdir /persist/bluetooth
+ln -s /persist/bluetooth /var/lib/bluetooth
 
 #syslog
 apt-get install -y busybox-syslogd
