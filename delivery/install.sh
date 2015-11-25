@@ -54,8 +54,8 @@ dtoverlay=mz61581
 cp 96-touch.rules /etc/udev/rules.d/
 
 apt-get -y install fake-hwclock
-rm /etc/fake-hwclock.save
-ln -s /etc/fake-hwclock.save /persist/fake-hwclock.save
+rm /etc/fake-hwclock.data
+ln -s /persist/fake-hwclock.data /etc/fake-hwclock.data
 fake-hwclock save
 
 #broken libsdl workaround
