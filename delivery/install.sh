@@ -26,7 +26,6 @@ echo ".Trashes
 " > /media/.mpdignore
 
 cp mpd.conf /etc
-usermod -aG pulse,pulse-access,bluetooth mpd
 mkdir /persist/mpd
 chown mpd:audio /persist/mpd
 
@@ -88,10 +87,20 @@ cp pointercal /etc
 apt-get install -y --no-install-recommends bluez bluez-tools pulseaudio pulseaudio-module-bluetooth
 
 sed -i "s/#Name.*/Name = AstraPi/" /etc/bluetooth/main.conf
+echo "load-module module-loopback
+" >> /etc/pulse/default.pa
 
 rm /var/lib/bluetooth
 mkdir /persist/bluetooth
 ln -s /persist/bluetooth /var/lib/bluetooth
+
+rm /var/lib/mpd/.config
+mkdir /persist/mpd/.config
+ln -s /persist/mpd/.config /var/lib/mpd/.config
+chown mpd:audio /persist/mpd/.config
+chown -H mpd:audio /var/lib/mpd/.config
+
+usermod -aG pulse,pulse-access,bluetooth mpd
 
 #syslog
 apt-get install -y busybox-syslogd
