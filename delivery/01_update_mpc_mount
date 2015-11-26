@@ -1,5 +1,10 @@
 #!/bin/bash
 
+until pids=$(pidof mpd)
+do
+    sleep 1
+done
+
 MEDIAFOLDER=`echo $UM_MOUNTPOINT | cut -c 2-`
 [ -d /media/usb ] && rm /media/usb
 /usr/bin/mpc update --wait > /dev/null
