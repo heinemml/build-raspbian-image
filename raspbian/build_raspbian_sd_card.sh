@@ -134,8 +134,12 @@ EOF
 
 
 if [ "${image}" != "" ]; then
+  echo "unmapping ${device}"
   losetup -d ${device}
-  device=`kpartx -va ${image} | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
+  ls -la /dev/mapper/
+  device=`kpartx -vas ${image} | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
+  echo "mapped ${image} to ${device}"
+  ls -la /dev/mapper/
   device="/dev/mapper/${device}"
   bootp=${device}p1
   persistp=${device}p2
@@ -156,12 +160,20 @@ else
   fi
 fi
 
+echo "formatting ${bootp} ${persistp} ${rootp}"
 mkfs.vfat ${bootp}
 mkfs.ext4 ${persistp}
 mkfs.ext4 ${rootp}
 
 mkdir -p ${rootfs}
 mount ${rootp} ${rootfs}
+cd ${rootfs}
+
+echo "---- running debootstrap ---"
+debootstrap --foreign --arch=armhf --no-check-gpg --include=ca-certificates ${deb_release} ${rootfs} ${deb_local_mirror}
+
+echo "---- copy qemu ---"
+cp /usr/bin/qemu-arm-static usr/bin/
 
 mkdir -p ${rootfs}/proc
 mkdir -p ${rootfs}/sys
@@ -169,16 +181,13 @@ mkdir -p ${rootfs}/dev
 mkdir -p ${rootfs}/dev/pts
 mkdir -p ${rootfs}/usr/src/delivery
 
-mount -t proc none ${rootfs}/proc
-mount -t sysfs none ${rootfs}/sys
 mount -o bind /dev ${rootfs}/dev
 mount -o bind /dev/pts ${rootfs}/dev/pts
+mount -t proc none ${rootfs}/proc
+mount -t sysfs none ${rootfs}/sys
 mount -o bind ${delivery_path} ${rootfs}/usr/src/delivery
 
-cd ${rootfs}
-
-debootstrap --foreign --arch armhf ${deb_release} ${rootfs} ${deb_local_mirror}
-cp /usr/bin/qemu-arm-static usr/bin/
+echo "---- running debootstrap second stage ---"
 LANG=C chroot ${rootfs} /debootstrap/debootstrap --second-stage
 
 mount ${bootp} ${bootfs}
