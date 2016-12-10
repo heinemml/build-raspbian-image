@@ -2,7 +2,7 @@
 
 machine=`uname -m`
 if [ "${machine}" != "armv7l" ]; then
-  echo "This script will be executed at mounted raspbian enviroment (armv7l). Current environment is ${machine}."
+  echo "This script will be executed at mounted raspbian environment (armv7l). Current environment is ${machine}."
   exit 1
 fi
 
@@ -14,13 +14,12 @@ echo ""
 sed -i "s/PermitRoot.*/PermitRootLogin yes/" /etc/ssh/sshd_config
 
 #mpd
-apt-get -y install mpd mpc alsa-utils python-pip python3 python3-pip python-pygame
+apt-get -y install mpd mpc alsa-utils python-pip python-pygame
 systemctl enable mpd
 echo "#\!/bin/sh
 mount -o remount,rw /" > /usr/sbin/rw
 chmod +x /usr/sbin/rw
 pip install python-mpd2
-pip3 install python-mpd2
 
 #ignore trashbin folders created by OS X
 echo ".Trashes
