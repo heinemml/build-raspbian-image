@@ -14,7 +14,7 @@ echo ""
 sed -i "s/PermitRoot.*/PermitRootLogin yes/" /etc/ssh/sshd_config
 
 #mpd
-apt-get -y install mpd mpc alsa-utils python-pip python-pygame
+apt-get -y install mpd mpc alsa-utils python-pip python-pygame python-dbus
 systemctl enable mpd
 echo "#\!/bin/sh
 mount -o remount,rw /" > /usr/sbin/rw
@@ -108,5 +108,8 @@ dpkg --purge rsyslog
 
 #set timezone
 timedatectl set-timezone Europe/Berlin
+
+#set hostname
+echo AstraPi > /etc/hostname
 
 
