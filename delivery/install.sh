@@ -86,7 +86,7 @@ cp pointercal /etc
 #pulseaudio
 apt-get install -y --no-install-recommends bluez bluez-tools pulseaudio pulseaudio-module-bluetooth
 
-sed -i "s/#Name.*/Name = AstraPi/" /etc/bluetooth/main.conf
+sed -i "s/#Name =.*/Name = AstraPi/" /etc/bluetooth/main.conf
 echo "load-module module-loopback
 " >> /etc/pulse/default.pa
 
