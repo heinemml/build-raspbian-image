@@ -215,10 +215,6 @@ auto eth0
 iface eth0 inet dhcp
 " > etc/network/interfaces
 
-echo "vchiq
-snd_bcm2835
-" >> etc/modules
-
 echo "console-common	console-data/keymap/policy	select	Select keymap from full list
 console-common	console-data/keymap/full	select	us
 " > debconf.set

@@ -49,6 +49,7 @@ mv /tmp/usbmount.conf /etc/usbmount/usbmount.conf
 apt-get -y install tslib libts-bin
 echo "dtparam=spi=on
 dtoverlay=mz61581
+dtparam=audio=on
 " >> /boot/config.txt
 
 cp 96-touch.rules /etc/udev/rules.d/
