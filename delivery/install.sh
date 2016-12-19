@@ -59,6 +59,10 @@ rm /etc/fake-hwclock.data
 ln -s /persist/fake-hwclock.data /etc/fake-hwclock.data
 fake-hwclock save
 
+#make sure it starts after mounting persist
+rm /etc/systemd/system/sysinit.target.wants/fake-hwclock.service
+cp fake-hwclock.service /etc/systemd/system/sysinit.target.wants/fake-hwclock.service
+
 #broken libsdl workaround
 echo "deb http://archive.raspbian.org/raspbian wheezy main
 " > /etc/apt/sources.list.d/wheezy.list
