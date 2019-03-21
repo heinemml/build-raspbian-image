@@ -1,37 +1,42 @@
 #!/bin/bash
 
-state=`grep "^state\:" /persist/mpd/state | awk '{print $2}'`
+#get playing state from statefile, mpd might not be started
+state=$(grep "^state\:" /persist/mpd/state | awk '{print $2}')
 
-until pids=$(pidof mpd)
+# restore playing state at end of script
+function cleanup {
+  mpc "$state"
+}
+trap cleanup EXIT
+
+[ -d /media/usb ] && rmdir /media/usb
+
+# wait until mpd is started
+until pidof mpd
 do
-    sleep 1
+  sleep 0.5
 done
 
-MEDIAFOLDER=`echo $UM_MOUNTPOINT | cut -c 2-`
-[ -d /media/usb ] && rm /media/usb
+# update the mpd library
 /usr/bin/mpc update --wait > /dev/null
 
-#add files not in playlist
-filelist=`mpc playlist -f %file%`
-if [ -z "$filelist" ]; then
+playlist=$(mpc playlist -f %file%)
+
+# if playlist is empty add all files in /media
+if [ -z "$playlist" ]; then
   mpc add media
   exit 0
 fi
 
-SAVEIFS=$IFS
-IFS=$(echo -en "\n\b")
-addedfolders=" "
-for folder in `find /media/ -mindepth 2 -type d -not -path "*/\.*"`
+# add files not in playlist
+while IFS= read -r -d '' folder
 do
-  myfolder=`echo $folder | cut -c 2-`
-  match=$(echo $filelist | grep $myfolder)
+  myfolder=$(echo "$folder" | cut -c 2-)
+  match=$(echo "$playlist" | grep "$myfolder")
   if [ -z "$match" ]; then
-    myfolder=`echo $folder | cut -c 2-`
+    myfolder=$(echo "$folder" | cut -c 2-)
     echo "adding $myfolder"
     mpc add "$myfolder"
-    filelist=`mpc playlist -f %file%`
+    playlist=$(mpc playlist -f %file%)
   fi
-done
-IFS=$SAVEIFS
-
-mpc $state
+done <  <(find /media/ -mindepth 2 -type d -not -path "*/\.*" -print0)
